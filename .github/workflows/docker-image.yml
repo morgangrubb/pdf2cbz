@@ -23,4 +23,4 @@ jobs:
         with:
           context: . # Path to your Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/bokehd:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/pdf2cbz:latest
