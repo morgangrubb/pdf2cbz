@@ -11,7 +11,7 @@ CBZ is a comic book archive format that is simply a ZIP file containing image fi
 - Convert single PDF files to CBZ
 - Batch convert all PDFs in a directory
 - Convert PDFs matching a glob pattern
-- High-quality image extraction (300 DPI)
+- Configurable image quality (default 150 DPI)
 - Lightweight Alpine Linux-based Docker image
 
 ## Prerequisites
@@ -43,6 +43,19 @@ docker run --rm -v $(pwd):/work pdf2cbz mycomic.pdf
 ```
 
 This will create `mycomic.cbz` in the same directory.
+
+#### Convert with Custom DPI Quality
+
+```bash
+# High quality (larger file size)
+docker run --rm -v $(pwd):/work -e PDF2CBZ_DPI=300 pdf2cbz mycomic.pdf
+
+# Low quality (smaller file size)
+docker run --rm -v $(pwd):/work -e PDF2CBZ_DPI=72 pdf2cbz mycomic.pdf
+
+# Very high quality
+docker run --rm -v $(pwd):/work -e PDF2CBZ_DPI=600 pdf2cbz mycomic.pdf
+```
 
 #### Convert All PDFs in Current Directory
 
@@ -76,9 +89,31 @@ docker run --rm pdf2cbz
 
 This displays usage information and examples.
 
+## Image Quality Configuration
+
+The output image quality can be configured using the `PDF2CBZ_DPI` environment variable:
+
+- **72 DPI**: Low quality, smallest file size (suitable for quick previews)
+- **150 DPI**: Medium quality, balanced size (**default**)
+- **300 DPI**: High quality, larger file size (recommended for printing)
+- **600 DPI**: Very high quality, very large file size (professional use)
+
+### Examples
+
+```bash
+# Default (150 DPI)
+docker run --rm -v $(pwd):/work pdf2cbz mycomic.pdf
+
+# High quality
+docker run --rm -v $(pwd):/work -e PDF2CBZ_DPI=300 pdf2cbz mycomic.pdf
+
+# Low quality (smaller files)
+docker run --rm -v $(pwd):/work -e PDF2CBZ_DPI=72 pdf2cbz "*.pdf"
+```
+
 ## How It Works
 
-1. **PDF Extraction**: Uses `pdftoppm` from poppler-utils to extract each page of the PDF as a high-resolution JPEG image (300 DPI)
+1. **PDF Extraction**: Uses `pdftoppm` from poppler-utils to extract each page of the PDF as a JPEG image at the specified DPI (default 150)
 2. **Archive Creation**: Uses `zip` to package all extracted images into a single archive file
 3. **Rename**: The archive is renamed with a `.cbz` extension
 
@@ -98,6 +133,9 @@ Add to your `~/.bashrc` or `~/.zshrc`:
 
 ```bash
 alias pdf2cbz='docker run --rm -v $(pwd):/work pdf2cbz'
+
+# Or with custom default DPI:
+alias pdf2cbz='docker run --rm -v $(pwd):/work -e PDF2CBZ_DPI=300 pdf2cbz'
 ```
 
 Then reload your shell configuration:
@@ -138,12 +176,15 @@ apk add poppler-utils zip bash
 ```bash
 chmod +x pdf2cbz.sh
 ./pdf2cbz.sh mycomic.pdf
+
+# With custom DPI
+PDF2CBZ_DPI=300 ./pdf2cbz.sh mycomic.pdf
 ```
 
 ## Technical Details
 
 - **Base Image**: Alpine Linux (minimal footprint)
-- **Image Resolution**: 300 DPI (configurable in script)
+- **Default Image Resolution**: 150 DPI (configurable via `PDF2CBZ_DPI` environment variable)
 - **Image Format**: JPEG
 - **Dependencies**: 
   - poppler-utils (provides `pdftoppm`)

@@ -8,6 +8,9 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Configuration
+DPI="${PDF2CBZ_DPI:-150}"  # Default to 150 DPI, configurable via environment variable
+
 # Function to print usage information
 print_usage() {
     cat << EOF
@@ -23,15 +26,23 @@ Arguments:
   DIRECTORY  Convert all PDF files in the specified directory
   GLOB       Convert all PDF files matching the glob pattern (e.g., "*.pdf" or "books/*.pdf")
 
+Environment Variables:
+  PDF2CBZ_DPI    Image quality in DPI (default: 150)
+                 Common values: 72 (low), 150 (medium), 300 (high), 600 (very high)
+
 Examples:
   pdf2cbz.sh mycomic.pdf              # Convert single file
   pdf2cbz.sh /path/to/pdfs/           # Convert all PDFs in directory
   pdf2cbz.sh "*.pdf"                  # Convert all PDFs in current directory
   pdf2cbz.sh "comics/*.pdf"           # Convert all PDFs matching pattern
 
+  PDF2CBZ_DPI=300 pdf2cbz.sh mycomic.pdf    # Convert with high quality
+  PDF2CBZ_DPI=72 pdf2cbz.sh "*.pdf"         # Convert with low quality (smaller files)
+
 Output:
   CBZ files are created in the same directory as the source PDF files.
   The output filename will be the same as the input PDF but with .cbz extension.
+  Current DPI setting: $DPI
 
 Requirements:
   - poppler-utils (for pdftoppm)
@@ -56,7 +67,7 @@ convert_pdf_to_cbz() {
         return 1
     fi
 
-    echo -e "${GREEN}Converting: $pdf_file${NC}"
+    echo -e "${GREEN}Converting: $pdf_file (DPI: $DPI)${NC}"
 
     # Get the base name without extension
     local base_name="${pdf_file%.pdf}"
@@ -67,8 +78,8 @@ convert_pdf_to_cbz() {
     local temp_dir=$(mktemp -d)
 
     # Extract PDF pages as images
-    echo "  Extracting pages..."
-    if ! pdftoppm -jpeg -r 300 "$pdf_file" "$temp_dir/page"; then
+    echo "  Extracting pages at ${DPI} DPI..."
+    if ! pdftoppm -jpeg -r "$DPI" "$pdf_file" "$temp_dir/page"; then
         echo -e "${RED}Error: Failed to extract pages from $pdf_file${NC}" >&2
         rm -rf "$temp_dir"
         return 1
