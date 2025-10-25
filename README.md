@@ -89,6 +89,20 @@ docker run --rm pdf2cbz
 
 This displays usage information and examples.
 
+## Skipping Existing Files
+
+By default, the script will skip PDFs that already have a corresponding CBZ file. This prevents unnecessary re-processing and saves time during batch conversions.
+
+To force overwrite existing CBZ files, use the `PDF2CBZ_FORCE` environment variable:
+
+```bash
+# Force overwrite existing CBZ files
+docker run --rm -v $(pwd):/work -e PDF2CBZ_FORCE=true pdf2cbz mycomic.pdf
+
+# Or set to 1
+docker run --rm -v $(pwd):/work -e PDF2CBZ_FORCE=1 pdf2cbz "*.pdf"
+```
+
 ## Image Quality Configuration
 
 The output image quality can be configured using the `PDF2CBZ_DPI` environment variable:
@@ -109,6 +123,9 @@ docker run --rm -v $(pwd):/work -e PDF2CBZ_DPI=300 pdf2cbz mycomic.pdf
 
 # Low quality (smaller files)
 docker run --rm -v $(pwd):/work -e PDF2CBZ_DPI=72 pdf2cbz "*.pdf"
+
+# Combine options: high quality and force overwrite
+docker run --rm -v $(pwd):/work -e PDF2CBZ_DPI=300 -e PDF2CBZ_FORCE=true pdf2cbz "*.pdf"
 ```
 
 ## How It Works
@@ -136,6 +153,9 @@ alias pdf2cbz='docker run --rm -v $(pwd):/work pdf2cbz'
 
 # Or with custom default DPI:
 alias pdf2cbz='docker run --rm -v $(pwd):/work -e PDF2CBZ_DPI=300 pdf2cbz'
+
+# Or with force overwrite enabled:
+alias pdf2cbz='docker run --rm -v $(pwd):/work -e PDF2CBZ_FORCE=true pdf2cbz'
 ```
 
 Then reload your shell configuration:
@@ -186,6 +206,7 @@ PDF2CBZ_DPI=300 ./pdf2cbz.sh mycomic.pdf
 - **Base Image**: Alpine Linux (minimal footprint)
 - **Default Image Resolution**: 150 DPI (configurable via `PDF2CBZ_DPI` environment variable)
 - **Image Format**: JPEG
+- **Overwrite Behavior**: Skips existing CBZ files by default (override with `PDF2CBZ_FORCE=true`)
 - **Dependencies**: 
   - poppler-utils (provides `pdftoppm`)
   - zip

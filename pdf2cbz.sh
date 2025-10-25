@@ -10,6 +10,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 DPI="${PDF2CBZ_DPI:-150}"  # Default to 150 DPI, configurable via environment variable
+FORCE="${PDF2CBZ_FORCE:-false}"  # Default to not overwriting existing files
 
 # Function to print usage information
 print_usage() {
@@ -29,6 +30,8 @@ Arguments:
 Environment Variables:
   PDF2CBZ_DPI    Image quality in DPI (default: 150)
                  Common values: 72 (low), 150 (medium), 300 (high), 600 (very high)
+  PDF2CBZ_FORCE  Overwrite existing CBZ files (default: false)
+                 Set to "true" or "1" to enable
 
 Examples:
   pdf2cbz.sh mycomic.pdf              # Convert single file
@@ -36,8 +39,9 @@ Examples:
   pdf2cbz.sh "*.pdf"                  # Convert all PDFs in current directory
   pdf2cbz.sh "comics/*.pdf"           # Convert all PDFs matching pattern
 
-  PDF2CBZ_DPI=300 pdf2cbz.sh mycomic.pdf    # Convert with high quality
-  PDF2CBZ_DPI=72 pdf2cbz.sh "*.pdf"         # Convert with low quality (smaller files)
+  PDF2CBZ_DPI=300 pdf2cbz.sh mycomic.pdf           # Convert with high quality
+  PDF2CBZ_DPI=72 pdf2cbz.sh "*.pdf"                # Convert with low quality (smaller files)
+  PDF2CBZ_FORCE=true pdf2cbz.sh mycomic.pdf        # Force overwrite existing CBZ
 
 Output:
   CBZ files are created in the same directory as the source PDF files.
@@ -67,19 +71,26 @@ convert_pdf_to_cbz() {
         return 1
     fi
 
-    echo -e "${GREEN}Converting: $pdf_file (DPI: $DPI)${NC}"
-
     # Get the base name without extension
     local base_name="${pdf_file%.pdf}"
     base_name="${base_name%.PDF}"
     local cbz_file="${base_name}.cbz"
+
+    # Check if CBZ file already exists and force flag is not set
+    if [ -f "$cbz_file" ] && [ "$FORCE" != "true" ] && [ "$FORCE" != "1" ]; then
+        echo -e "${YELLOW}Skipping: $pdf_file (CBZ already exists: $cbz_file)${NC}"
+        echo -e "${YELLOW}  Use PDF2CBZ_FORCE=true to overwrite existing files${NC}"
+        return 0
+    fi
+
+    echo -e "${GREEN}Converting: $pdf_file (DPI: $DPI)${NC}"
 
     # Create a temporary directory for extracted images
     local temp_dir=$(mktemp -d)
 
     # Extract PDF pages as images
     echo "  Extracting pages at ${DPI} DPI..."
-    if ! pdftoppm -jpeg -r "$DPI" "$pdf_file" "$temp_dir/page"; then
+    if ! pdftoppm -jpeg -r "$DPI" "$pdf_file" "$temp_dir/page" 2>&1; then
         echo -e "${RED}Error: Failed to extract pages from $pdf_file${NC}" >&2
         rm -rf "$temp_dir"
         return 1
