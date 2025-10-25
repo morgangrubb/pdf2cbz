@@ -1,0 +1,34 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+*.md
+
+# Docker files
+Dockerfile
+.dockerignore
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test files
+test/
+tests/
+*.test.sh
+
+# Build artifacts
+*.cbz
+*.pdf
+
+# Temporary files
+tmp/
+temp/
+*.tmp

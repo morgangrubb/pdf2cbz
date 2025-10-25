@@ -1,0 +1,180 @@
+# PDF to CBZ Converter
+
+A simple Docker-based tool to convert PDF files to CBZ (Comic Book Archive) format.
+
+## What is CBZ?
+
+CBZ is a comic book archive format that is simply a ZIP file containing image files (typically JPEG or PNG). This format is widely supported by comic book readers and e-reading applications.
+
+## Features
+
+- Convert single PDF files to CBZ
+- Batch convert all PDFs in a directory
+- Convert PDFs matching a glob pattern
+- High-quality image extraction (300 DPI)
+- Lightweight Alpine Linux-based Docker image
+
+## Prerequisites
+
+- Docker installed on your system
+
+## Building the Docker Image
+
+```bash
+docker build -t pdf2cbz .
+```
+
+## Usage
+
+### Basic Syntax
+
+```bash
+docker run --rm -v /path/to/pdfs:/work pdf2cbz [FILE|DIRECTORY|GLOB]
+```
+
+The `-v` flag mounts your local directory containing PDFs into the container's `/work` directory.
+
+### Examples
+
+#### Convert a Single PDF
+
+```bash
+docker run --rm -v $(pwd):/work pdf2cbz mycomic.pdf
+```
+
+This will create `mycomic.cbz` in the same directory.
+
+#### Convert All PDFs in Current Directory
+
+```bash
+docker run --rm -v $(pwd):/work pdf2cbz .
+```
+
+or
+
+```bash
+docker run --rm -v $(pwd):/work pdf2cbz "*.pdf"
+```
+
+#### Convert All PDFs in a Specific Directory
+
+```bash
+docker run --rm -v /home/user/comics:/work pdf2cbz /work
+```
+
+#### Convert PDFs Matching a Pattern
+
+```bash
+docker run --rm -v $(pwd):/work pdf2cbz "volume*.pdf"
+```
+
+### No Arguments - Show Help
+
+```bash
+docker run --rm pdf2cbz
+```
+
+This displays usage information and examples.
+
+## How It Works
+
+1. **PDF Extraction**: Uses `pdftoppm` from poppler-utils to extract each page of the PDF as a high-resolution JPEG image (300 DPI)
+2. **Archive Creation**: Uses `zip` to package all extracted images into a single archive file
+3. **Rename**: The archive is renamed with a `.cbz` extension
+
+## Output
+
+- CBZ files are created in the same directory as the source PDF files
+- Output filename is the same as the input PDF but with `.cbz` extension
+- Original PDF files are not modified or deleted
+
+## Creating a Convenient Alias
+
+To make the command easier to use, you can create a shell alias:
+
+### Bash/Zsh
+
+Add to your `~/.bashrc` or `~/.zshrc`:
+
+```bash
+alias pdf2cbz='docker run --rm -v $(pwd):/work pdf2cbz'
+```
+
+Then reload your shell configuration:
+
+```bash
+source ~/.bashrc  # or source ~/.zshrc
+```
+
+Now you can simply run:
+
+```bash
+pdf2cbz mycomic.pdf
+```
+
+## Script-Only Usage (Without Docker)
+
+If you prefer to run the script directly without Docker, you can use `pdf2cbz.sh` on any system with bash, poppler-utils, and zip installed:
+
+### Install Dependencies
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get install poppler-utils zip
+```
+
+**macOS:**
+```bash
+brew install poppler
+```
+
+**Alpine Linux:**
+```bash
+apk add poppler-utils zip bash
+```
+
+### Run the Script
+
+```bash
+chmod +x pdf2cbz.sh
+./pdf2cbz.sh mycomic.pdf
+```
+
+## Technical Details
+
+- **Base Image**: Alpine Linux (minimal footprint)
+- **Image Resolution**: 300 DPI (configurable in script)
+- **Image Format**: JPEG
+- **Dependencies**: 
+  - poppler-utils (provides `pdftoppm`)
+  - zip
+  - bash
+
+## Troubleshooting
+
+### Permission Errors
+
+If you encounter permission errors when running the Docker container, ensure the mounted directory has appropriate permissions:
+
+```bash
+chmod 755 /path/to/pdfs
+```
+
+### Large PDF Files
+
+For very large PDF files with many pages, the conversion may take some time and require significant disk space for temporary image files. The script cleans up temporary files automatically after conversion.
+
+### No Output Files
+
+If no CBZ files are created, check:
+- The input files are valid PDF files
+- The PDF files contain actual pages (not empty)
+- You have write permissions in the output directory
+
+## License
+
+This project is provided as-is for public use.
+
+## Contributing
+
+Feel free to submit issues, fork the repository, and create pull requests for any improvements.
